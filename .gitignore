@@ -1,0 +1,23 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Large raw data (elevation tiles are 67 MB; re-download with scripts/)
+data/raw/*.tif
+data/raw/*.tiff
+
+# Uploaded barrier photos (may contain people)
+data/uploads/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Local preview maps (regenerate with scripts/preview.py)
+data/processed/preview*.html

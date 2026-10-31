@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Wheelio</title>
+  <meta name="description" content="Campus routes for wheelchair users, ranked by effort, ending at an accessible entrance.">
+  <meta name="theme-color" content="#eceff1">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Wheelio">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <!-- Atkinson Hyperlegible: designed by the Braille Institute for readers with low vision. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- The sheet comes first in the DOM so screen readers and Tab reach search and routes before the map. -->
+  <section id="sheet" class="sheet" data-view="plan" aria-labelledby="app-title">
+    <div class="sheet-header">
+      <button id="sheet-handle" class="sheet-handle" type="button" aria-controls="sheet-body" aria-expanded="true" aria-label="Show more">
+        <span class="grip" aria-hidden="true"></span>
+      </button>
+      <div class="sheet-summary">
+        <h1 id="app-title">Wheelio</h1>
+        <p id="summary" class="summary">Where to?</p>
+        <button id="nav-end" class="btn-end" type="button" hidden>End</button>
+      </div>
+    </div>
+
+    <div id="sheet-body" class="sheet-body">
+      <section class="trip" aria-label="Trip">
+        <div class="field">
+          <label for="start-input">From</label>
+          <div class="combo">
+            <input id="start-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false"
+              aria-controls="start-list" aria-describedby="start-hint" autocomplete="off" spellcheck="false"
+              placeholder="Your location or a building">
+            <ul id="start-list" class="combo-list" role="listbox" aria-label="Start options" hidden></ul>
+          </div>
+          <p id="start-hint" class="hint">Or tap the map. Your location is used only to find the route and is never stored.</p>
+        </div>
+        <div class="field">
+          <label for="dest-input">To</label>
+          <div class="combo">
+            <input id="dest-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false"
+              aria-controls="dest-list" autocomplete="off" spellcheck="false" placeholder="Search a building">
+            <ul id="dest-list" class="combo-list" role="listbox" aria-label="Buildings" hidden></ul>
+          </div>
+        </div>
+        <p id="combo-count" class="sr-only" role="status"></p>
+      </section>
+
+      <div id="status" role="status" class="status"></div>
+
+      <section id="nav-panel" class="nav-panel" aria-label="Navigation" hidden>
+        <p id="nav-remaining" class="nav-remaining"></p>
+        <p id="nav-ahead" class="nav-ahead"></p>
+        <p id="nav-route" class="hint"></p>
+        <p class="hint">Your location stays on this phone, except to find a new route if you leave this one.</p>
+      </section>
+
+      <section id="results" aria-labelledby="results-title" hidden>
+        <div class="results-head">
+          <h2 id="results-title" class="results-title">Choose a route</h2>
+          <p id="tradeoff" class="tradeoff"></p>
+        </div>
+        <button id="trip-row" class="trip-row" type="button">
+          <span class="trip-row-text">
+            <span class="trip-row-line"><span class="trip-row-label">From</span> <span id="trip-from"></span></span>
+            <span class="trip-row-line"><span class="trip-row-label">To</span> <span id="trip-to"></span></span>
+          </span>
+          <span class="trip-row-edit">Edit</span>
+        </button>
+        <fieldset class="route-options">
+          <legend class="sr-only">Routes</legend>
+          <div id="cards"></div>
+        </fieldset>
+        <div id="route-details"></div>
+        <p class="hint">Every route avoids stairs and ends at an accessible entrance.</p>
+        <div id="demo-sim" class="demo-sim" hidden>
+          <p class="hint">Demo only: replays the trip without moving.</p>
+          <button id="sim-trip" class="btn-secondary" type="button">Simulate the trip</button>
+          <button id="sim-wrong" class="btn-secondary" type="button">Simulate a wrong turn</button>
+        </div>
+      </section>
+
+      <p id="account-line" class="account-line" hidden>
+        Signed in as <strong id="account-name"></strong>.
+        <button id="fixlist-open" class="link-btn" type="button" hidden>Fix list</button>
+        <button id="sign-out" class="link-btn" type="button">Sign out</button>
+      </p>
+    </div>
+  </section>
+
+  <!-- Pinned under the sheet's content so Start is always one tap away, like Google Maps. Outside the
+       sheet because the sheet slides (a transformed parent would move a fixed child with it). -->
+  <div id="start-bar" class="start-bar" hidden>
+    <button id="nav-start" class="btn-primary" type="button">Start navigation</button>
+  </div>
+
+  <main id="map-wrap">
+    <h2 class="sr-only">Map</h2>
+    <!-- Phone only: the destination as a search pill over the map; the sheet holds the fields. -->
+    <div class="search-bar">
+      <button id="search-pill" class="search-pill" type="button">
+        <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5 20 20" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <span id="search-pill-text">Where to?</span>
+      </button>
+      <button id="search-clear" class="search-clear" type="button" aria-label="Clear destination" hidden>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="view-toggle" role="group" aria-label="Map view">
+      <button type="button" data-view="2d" aria-pressed="true">2D</button>
+      <button type="button" data-view="3d" aria-pressed="false">3D</button>
+    </div>
+    <button id="mapkey-btn" class="mapkey-btn" type="button" aria-haspopup="dialog">
+      <svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true"><rect x="9" y="9" width="30" height="30" rx="4" transform="rotate(45 24 24)" fill="#ef6c00" stroke="#fff" stroke-width="3"/><path d="M14.5 31.5h19v-11z" fill="#fff"/></svg>
+      <span>Map key</span>
+    </button>
+    <button id="recenter" class="recenter" type="button" hidden>Re-center</button>
+    <button id="legend-strip" class="legend-strip" type="button" aria-label="Map key: very steep hill, steep hill, gravel, stairs. Open the full key."></button>
+    <div id="map"></div>
+  </main>
+
+  <!-- Report a barrier: floats above the sheet. -->
+  <button id="report-btn" class="report-btn" type="button" aria-label="Report a barrier">
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z" fill="currentColor"/><path d="M12 9.5v5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.25" fill="#fff"/></svg>
+    <span>Report</span>
+  </button>
+
+  <!-- "Is the barrier here?": shown over the map while the user places the pin. -->
+  <div id="place-ui" class="place-ui" hidden>
+    <div class="place-banner">
+      <h2 class="place-title">Is the barrier here?</h2>
+      <p class="place-hint">Drag the pin onto the path where the barrier is. The highlighted path is where your report goes.</p>
+    </div>
+    <div class="place-bar">
+      <button id="place-back" class="btn-secondary" type="button">Back</button>
+      <button id="place-send" class="btn-primary" type="button">Send report</button>
+    </div>
+  </div>
+
+  <!-- Report flow: sign in (if needed), photo, checking, result. -->
+  <!-- Map key: what every color and sign means, plus display settings. -->
+  <dialog id="mapkey-dialog" class="sheet-dialog mapkey" aria-labelledby="mapkey-title">
+    <div class="mapkey-head">
+      <h2 id="mapkey-title">Map key</h2>
+      <button id="mapkey-close" class="icon-btn" type="button" aria-label="Close map key">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div id="mapkey-rows"></div>
+    <section class="key-group key-settings">
+      <h3>Display</h3>
+      <label class="switch-row"><span><strong>Colorblind mode</strong><span>Blue to purple colors, with patterns on steep parts</span></span><input id="set-colorblind" type="checkbox" role="switch"></label>
+      <label class="switch-row"><span><strong>Show hazards on the map</strong><span>Hills, gravel, brick and stairs on every path</span></span><input id="set-hazards" type="checkbox" role="switch" checked></label>
+    </section>
+    <p class="key-note">Hill steepness comes from 1-meter elevation data. How hard each stretch feels is our own estimate from wheelchair research.</p>
+  </dialog>
+
+  <dialog id="report-dialog" class="screen-dialog" aria-labelledby="report-title">
+    <header class="dialog-head">
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+      <h2 id="report-title" class="dialog-title">Report a barrier</h2>
+      <span class="icon-btn-spacer" aria-hidden="true"></span>
+    </header>
+
+    <section class="step" data-step="signin">
+      <p class="demo-badge">Demo sign-in</p>
+      <h3 class="step-title">Who's reporting?</h3>
+      <p class="step-text">Anyone can report. A report from a campus account confirms the barrier right away, so routes go around it.</p>
+      <ul id="account-list" class="account-list" aria-label="Demo accounts"></ul>
+      <button id="report-anon" class="btn-secondary" type="button">Report without signing in</button>
+      <p class="hint">Without an account, your report adds a warning until a campus account or three reports in all confirm it. Demo accounts have no password; the real app would use Dartmouth sign-in.</p>
+    </section>
+
+    <section class="step" data-step="photo">
+      <div class="photo-frame">
+        <img id="photo-preview" alt="Your photo of the barrier" hidden>
+        <label id="photo-take" class="photo-take" for="photo-input">
+          <svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.3" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span>Take a photo</span>
+        </label>
+      </div>
+      <input id="photo-input" class="sr-only" type="file" accept="image/*" capture="environment">
+      <p class="step-text center">Show the barrier and the path it blocks (construction, a blocked ramp, snow at a curb cut). Keep faces out of the photo.</p>
+      <div class="step-actions">
+        <label id="photo-retake" class="btn-secondary btn-label" for="photo-input" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z" fill="currentColor"/><circle cx="12" cy="13.3" r="3.2" fill="#fff"/></svg>
+          Retake
+        </label>
+        <button id="photo-next" class="btn-primary" type="button" disabled>Next: place it on the map</button>
+      </div>
+    </section>
+
+    <section class="step" data-step="sending" aria-live="polite">
+      <div class="sending">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <h3 class="step-title">Checking the photo…</h3>
+        <p class="step-text center">Claude looks at what's blocking the path.</p>
+      </div>
+    </section>
+
+    <section class="step" data-step="result">
+      <div class="result">
+        <span id="result-icon" class="result-icon" aria-hidden="true"></span>
+        <h3 id="result-title" class="step-title center"></h3>
+        <p id="result-text" class="step-text center"></p>
+        <div id="result-card" class="result-card">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span><strong id="result-status"></strong><span id="result-next"></span></span>
+        </div>
+      </div>
+      <div class="step-actions">
+        <button id="result-action" class="btn-primary" type="button">Done</button>
+      </div>
+    </section>
+  </dialog>
+
+  <!-- Barrier details: opens from a pin on the map. -->
+  <dialog id="barrier-dialog" class="sheet-dialog" aria-labelledby="barrier-title">
+    <header class="dialog-head left">
+      <h2 id="barrier-title" class="dialog-title">Barrier details</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+    <div class="barrier-body">
+      <img id="barrier-photo" class="barrier-photo" alt="" hidden>
+      <div class="barrier-info">
+        <p id="barrier-type" class="barrier-type"></p>
+        <p id="barrier-desc" class="barrier-desc"></p>
+        <p id="barrier-status" class="barrier-status"></p>
+      </div>
+    </div>
+    <div class="vote">
+      <p class="vote-q" id="vote-q">Still there?</p>
+      <div class="vote-buttons" role="group" aria-labelledby="vote-q">
+        <button id="vote-yes" class="btn-secondary" type="button">Yes, still there</button>
+        <button id="vote-no" class="btn-secondary" type="button">No, it's gone</button>
+      </div>
+      <p id="vote-msg" class="hint" role="status"></p>
+    </div>
+  </dialog>
+
+  <!-- Facilities: Claude's fix list (signed in as facilities staff). -->
+  <dialog id="fixlist-dialog" class="screen-dialog" aria-labelledby="fixlist-title">
+    <header class="dialog-head">
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <h2 id="fixlist-title" class="dialog-title">Fix list</h2>
+      <span class="icon-btn-spacer" aria-hidden="true"></span>
+    </header>
+    <div class="fixlist-body">
+      <p id="fixlist-ai" class="ai-badge" hidden>Draft by AI, check before acting</p>
+      <p id="fixlist-summary" class="step-text"></p>
+      <p id="fixlist-msg" class="hint" role="status"></p>
+      <ol id="fixlist-items" class="fixlist-items"></ol>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="app.js"></script>
+  <script src="maplayers.js"></script>
+  <script src="reports.js"></script>
+</body>
+</html>

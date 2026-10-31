@@ -1,0 +1,15 @@
+{
+  "name": "Wheelio",
+  "short_name": "Wheelio",
+  "description": "Campus routes for wheelchair users, ranked by effort, ending at an accessible entrance.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3efe2",
+  "theme_color": "#f3efe2",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

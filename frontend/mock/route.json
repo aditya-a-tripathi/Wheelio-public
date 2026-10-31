@@ -1,0 +1,199 @@
+{
+  "routes": [
+    {
+      "id": "least_effort",
+      "geojson": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -72.2893,
+            43.7027
+          ],
+          [
+            -72.2878,
+            43.7031
+          ],
+          [
+            -72.2876,
+            43.7048
+          ],
+          [
+            -72.2886,
+            43.7057
+          ]
+        ]
+      },
+      "distance_m": 430.0,
+      "time_min": 7.5,
+      "effort": 520.0,
+      "max_grade_pct": 4.1,
+      "elevation_profile": [
+        [
+          0,
+          163.0
+        ],
+        [
+          125,
+          164.0
+        ],
+        [
+          315,
+          166.5
+        ],
+        [
+          430,
+          167.0
+        ]
+      ],
+      "segments": [
+        {
+          "edge_id": "m1",
+          "effort": 130.0,
+          "grade_pct": 0.8,
+          "coordinates": [
+            [
+              -72.2893,
+              43.7027
+            ],
+            [
+              -72.2878,
+              43.7031
+            ]
+          ],
+          "steepness": "gentle",
+          "material": "Concrete"
+        },
+        {
+          "edge_id": "m2",
+          "effort": 260.0,
+          "grade_pct": 4.1,
+          "coordinates": [
+            [
+              -72.2878,
+              43.7031
+            ],
+            [
+              -72.2876,
+              43.7048
+            ]
+          ],
+          "steepness": "gentle",
+          "material": "Concrete"
+        },
+        {
+          "edge_id": "m3",
+          "effort": 130.0,
+          "grade_pct": 0.5,
+          "coordinates": [
+            [
+              -72.2876,
+              43.7048
+            ],
+            [
+              -72.2886,
+              43.7057
+            ]
+          ],
+          "steepness": "gentle",
+          "material": "Concrete"
+        }
+      ],
+      "warnings": [],
+      "steepness": "gentle",
+      "climb_m": 4.0,
+      "entrance": {
+        "id": "ent-mock",
+        "name": "Baker Library",
+        "lat": 43.7057,
+        "lon": -72.2886
+      }
+    },
+    {
+      "id": "fastest",
+      "geojson": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -72.2893,
+            43.7027
+          ],
+          [
+            -72.2889,
+            43.7042
+          ],
+          [
+            -72.2886,
+            43.7057
+          ]
+        ]
+      },
+      "distance_m": 340.0,
+      "time_min": 5.5,
+      "effort": 690.0,
+      "max_grade_pct": 9.2,
+      "elevation_profile": [
+        [
+          0,
+          163.0
+        ],
+        [
+          170,
+          165.5
+        ],
+        [
+          340,
+          167.0
+        ]
+      ],
+      "segments": [
+        {
+          "edge_id": "m4",
+          "effort": 420.0,
+          "grade_pct": 9.2,
+          "coordinates": [
+            [
+              -72.2893,
+              43.7027
+            ],
+            [
+              -72.2889,
+              43.7042
+            ]
+          ],
+          "steepness": "steep",
+          "material": "Concrete"
+        },
+        {
+          "edge_id": "m5",
+          "effort": 270.0,
+          "grade_pct": 2.0,
+          "coordinates": [
+            [
+              -72.2889,
+              43.7042
+            ],
+            [
+              -72.2886,
+              43.7057
+            ]
+          ],
+          "steepness": "gentle",
+          "material": "Concrete"
+        }
+      ],
+      "warnings": [
+        "Has a steep hill, steeper than a standard wheelchair ramp. (Mock data)"
+      ],
+      "steepness": "steep",
+      "climb_m": 4.0,
+      "entrance": {
+        "id": "ent-mock",
+        "name": "Baker Library",
+        "lat": 43.7057,
+        "lon": -72.2886
+      }
+    }
+  ],
+  "tradeoff_text": "2 min longer, avoids a steep hill. (Mock data)",
+  "start_snap_m": 3.0
+}

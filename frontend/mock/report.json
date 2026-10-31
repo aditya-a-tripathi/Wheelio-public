@@ -1,0 +1,22 @@
+{
+  "id": "r1",
+  "barrier_type": "construction",
+  "severity": "high",
+  "passable_for_manual_chair": false,
+  "confidence": 0.86,
+  "description": "Construction fencing blocks the curb ramp (mock).",
+  "lat": 43.704,
+  "lon": -72.2889,
+  "edge_id": "m4",
+  "status": "reported",
+  "created_at": "2026-10-31T08:00:00Z",
+  "expires_at": "2026-11-02T08:00:00Z",
+  "confirmations": 0,
+  "verified_by_facilities": false,
+  "still_there_yes": 0,
+  "still_there_no": 0,
+  "last_confirmed_at": null,
+  "photo_url": null,
+  "status_text": "Reported just now. Not confirmed yet. (Mock)",
+  "reported_by": null
+}

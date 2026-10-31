@@ -1,0 +1,17 @@
+{
+  "type": "FeatureCollection",
+  "_about": "Accessible paths that are missing from Dartmouth's Path of Travel AND from OpenStreetMap, added by hand. Every feature must be checked on satellite imagery; say who checked it and how in 'note'. scripts/build_graph.py adds these to the network (source 'added'). Material: Concrete, Pavement, Brick, Gravel or Crosswalk.",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "material": "Concrete",
+        "note": "South sidewalk of E Wheelock St (Route 10), from the Main St crosswalk east to the Hopkins Center plaza. Wide paved sidewalk visible on Esri satellite imagery; reported by Aditya from the app (Oct 30). Checked on imagery."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-72.28847, 43.7024], [-72.2882, 43.70243], [-72.28777, 43.70248]]
+      }
+    }
+  ]
+}

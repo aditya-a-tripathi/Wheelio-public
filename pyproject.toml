@@ -1,0 +1,20 @@
+[project]
+name = "wheelio"
+version = "0.1.0"
+description = "Campus wheelchair router ranked by physical effort"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "anthropic",
+    "certifi>=2026.10.23",
+    "fastapi",
+    "networkx",
+    "numpy>=2.5.4",
+    "pillow>=13.0.0",
+    "pydantic",
+    "python-dotenv",
+    "python-multipart",
+    "rasterio>=1.5.2",
+    "shapely",
+    "uvicorn[standard]",
+]
