@@ -3,38 +3,38 @@
 **A campus navigator for wheelchair users.** From wherever you are on campus to any building, along the accessible route that takes the least physical effort, ending at an accessible entrance.
 
 <p align="center">
-  <img src="docs/images/route.png" alt="Wheelio on a phone: the least effort route (13 min, no steep hills or gravel) drawn next to the fastest route (7 min, with a very steep hill and gravel), with stairs and steep hills marked on the map" width="320">
+  <img src="docs/images/route.png" alt="Wheelio on a phone: a trip to Rollins Chapel, with the least effort route (8 min, no steep hills or gravel) drawn next to the fastest route (7 min, with a very steep hill), and stairs, steep hills and gravel marked on the map" width="320">
 </p>
 
 Built at the **AI at 70 Hackathon at Dartmouth** (October 30 to 31, 2026) by Aditya Tripathi and Caleb Zhou.
 
-> Wheelio is a student project. It is not affiliated with or endorsed by Dartmouth College.
+> Wheelio is a student project built for Dartmouth's campus. It is not yet affiliated with or endorsed by Dartmouth College.
 
 ---
 
 ## The problem
 
-Dartmouth sits on a hill. For a student in a manual wheelchair, the shortest path between two buildings can mean a very steep climb, a gravel shortcut, or a flight of stairs with no warning until you reach it.
+Dartmouth is known as the "College on the Hill." For a student in a manual wheelchair, the shortest path between two buildings can mean a very steep climb, a stretch of rough gravel, or a flight of stairs with no warning until you reach it.
 
-- Dartmouth's accessible shuttle (MobiliD) runs Monday to Friday, 7 a.m. to 7 p.m. Evenings and weekends, students wheel the whole way.
-- Existing tools don't solve it. Google Maps has wheelchair routes for transit, not campus paths. Dartmouth's accessibility map is static and color-coded. None of them rank routes by how tiring they are, route to the accessible door, or update when a ramp is blocked today.
+- Dartmouth's accessible shuttle (MobiliD) runs Monday to Friday, 7 a.m. to 7 p.m. On evenings and weekends, wheelchair users do not have this option to get from place to place on campus.
+- Existing tools don't solve it. Google Maps offers wheelchair-accessible transit directions and marks which places have accessible entrances, but it doesn't route you along campus paths to that entrance. It doesn't look for the least tiring way there, or warn about steep hills, gravel or stairs along the way, all of which matter to wheelchair users and others with limited mobility, such as people using crutches or a walker. Dartmouth's accessibility map is static and color-coded, and neither one updates when an obstacle blocks a ramp on a given day.
 
 ## What it does
 
-- **Start anywhere.** Use your phone's location, tap the map, or pick a building. If you start off the path network (a parking lot, a lawn), Wheelio snaps you to the nearest path and tells you how far away it is.
-- **Go to any building.** Search by name or nickname. The route ends at that building's accessible entrance, not its front door.
-- **Two routes, you choose.** The **least effort** route (avoids hills, gravel and stairs) is shown next to the **fastest** accessible route, with the tradeoff in plain words: "6 min longer, avoids a very steep hill."
+- **Start anywhere.** Use your phone's location, tap the map, or pick a building as your starting point. If you start off the path network (a parking lot, a lawn), Wheelio snaps you to the nearest path and tells you how far away it is.
+- **Go to any building.** Search by name or nickname. The route ends at the specific accessible entrance of that building most easily reachable from the user's starting location, not at the building's front door.
+- **Two routes, you choose.** The **least effort** route (avoiding steep hills, gravel paths and stairs) is shown next to the **fastest** accessible route, with the tradeoff in plain words: "6 min longer, avoids a very steep hill."
 - **Hazards you can see.** Stairs, steep and very steep hills (with uphill arrows), gravel and brick are always drawn and labeled on the map. The route itself is colored by difficulty, with a colorblind mode that adds line patterns.
 - **Plain language.** Users see "gentle", "moderate", "steep" and "very steep", not grade percentages. Exact numbers sit in an optional details view.
 - **Live navigation.** Follows your location, counts down time left, warns "Steep stretch in 200 ft", reroutes if you go off course, and tells you when you've reached the accessible entrance.
-- **Barrier reports.** Take a photo of a blocked ramp or construction fence. AI checks the photo, the report is pinned to the path it affects, and routes adapt for everyone, cautiously (see the trust rules below).
-- **Facilities fix list.** Facilities staff get a prioritized list of confirmed barriers with photos, and can mark each one confirmed, not a barrier, or fixed.
+- **Barrier reports.** Take a photo of a blocked ramp or obstacle in any path on campus. AI checks the photo, the report is pinned to the path it affects, and routes are updated for everyone cautiously (see the trust rules below).
+- **Facilities fix list.** Facilities staff get a prioritized list of potential barriers with photos, and can mark each one confirmed, not a barrier, or fixed.
 - **Works as a phone app.** A mobile-first web app with a draggable bottom sheet, 44 px touch targets, and "Add to Home Screen" support.
 
 ## How it works
 
 ### 1. The path network
-Dartmouth publishes its accessible "Path of Travel" map as a public ArcGIS service: about 2,700 path segments, each with a surface (concrete, pavement, brick, gravel, stairs, crosswalk) and a coarse slope class. `scripts/build_graph.py` joins those segments into a routable graph, splits lines where one path meets the middle of another, and fills a few gaps with paved OpenStreetMap sidewalks and hand-checked additions. The result is about 2,650 edges, 99% of them in one connected network. Each of the 217 accessible entrances is snapped onto the network.
+Dartmouth publishes its accessible "Path of Travel" map as a public ArcGIS service: about 2,700 path segments, each with a surface (concrete, pavement, brick, gravel, stairs, crosswalk) and a coarse slope class. `scripts/build_graph.py` joins those segments into a routable graph, splits lines where one path meets the middle of another, and fills a few gaps with paved OpenStreetMap sidewalks and hand-checked additions. The result is about 2,850 path segments meeting at about 2,370 junctions, 98% of them in one connected network. Each of the 217 accessible entrances is snapped onto the network.
 
 ### 2. Elevation
 Dartmouth's slope classes are too coarse ("under 5", "over 5", "over 10") and say nothing about direction. `scripts/add_elevation.py` samples the USGS 1 meter lidar elevation model every 5 m along every path and stores, for each direction: the steepest uphill stretch (a best-fit line over 15 m, to smooth out lidar noise), the total climb, and the full elevation profile. Where lidar is unreliable (bridges and decks, which bare-earth lidar removes), it falls back to Dartmouth's label.
@@ -58,16 +58,16 @@ Any stretch steeper than the user's limit is avoided (default 8.33%, the steepes
 Wheelio uses Claude (Anthropic's API) for three jobs. **The routing math is plain, deterministic code. AI never picks a route.**
 
 - **Photo check:** classifies a barrier photo (type, severity, passable or not for a manual chair, confidence). It is told to ignore people and any text in the photo.
-- **Route briefing:** one or two plain sentences about what to expect ("One moderate slope near Dartmouth Hall, then flat to the side entrance"). Code computes the facts; Claude only words them, and a filter rejects percentages and jargon.
-- **Facilities fix list:** code orders the confirmed barriers; Claude drafts the summary, labeled "Draft by AI, check before acting."
+- **Route briefing:** one or two plain sentences about what to expect ("One moderate slope near Dartmouth Hall, then flat to the side entrance"). Wheelio works out the facts from the route itself; Claude only puts them into words, and Wheelio rejects any briefing that includes percentages or technical jargon.
+- **Facilities fix list:** Wheelio ranks the reports, confirmed barriers first; Claude drafts the summary, labeled "Draft by AI, check before acting."
 
 Every AI feature has a non-AI fallback, so the app works with no API key, a slow network, or a refused request.
 
 ### 5. Barrier reports: who can report, and how fake ones are handled
-A fake report costs someone a detour. A missed real barrier can strand someone. So reports only ever add caution, and the user always sees an alternative.
+Barrier reports are built around one tradeoff. A false report costs someone a slightly longer route. A real barrier the app doesn't know about is found only on arrival, after the effort is already spent. So unconfirmed reports only ever add caution, and the user always sees an alternative.
 
-- **Anyone** can report without an account. It shows as "Reported, unconfirmed", adds a small penalty and a warning, and never blocks a path on its own.
-- **A signed-in student** confirms it: one signed-in report with a confident photo check, or one signed-in "Still there? Yes", blocks the path temporarily. Three independent reports also confirm it.
+- **Anyone** can report without an account. A single report shows as "Reported, unconfirmed": the path gets a warning and a small penalty, but stays open.
+- **A report becomes confirmed** in one of two ways: a signed-in student backs it (their own report with a confident photo check, or a "Still there? Yes" tap), or three people report the same barrier in the same place, with or without accounts. Routes then go around it until the report expires. If a wheelchair can still get past, the path stays open but counts as harder.
 - **Facilities staff** reports count as verified right away and stay until staff mark them fixed.
 - When the photo check is unsure, the report goes to "needs a person to confirm" and changes no routes until someone does.
 - Photos come from the live camera only (no gallery uploads), within about 30 m of the path. Reports expire after 12 hours (48 hours for construction), are rate-limited, and duplicate photos are rejected.
